@@ -3,10 +3,8 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { AforoEntry, PredictionResult } from "../types";
 
 export const analyzeGymData = async (data: AforoEntry[], currentDay: string): Promise<PredictionResult> => {
-  // Always initialize a new GoogleGenAI instance using the API key from environment variables
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
   
-  // Filtrar datos válidos (>5% para evitar cierres y horario real)
   const dayData = data.filter(d => 
     d.dayOfWeek.toLowerCase() === currentDay.toLowerCase() && 
     d.occupancy > 5
@@ -21,17 +19,18 @@ export const analyzeGymData = async (data: AforoEntry[], currentDay: string): Pr
 
   const prompt = `
     Analiza el aforo histórico del gimnasio XFitness Abrantes para los ${currentDay}s.
-    Datos horarios: ${hourlyStats}
+    Datos promedios horarios: ${hourlyStats}
     
-    Contexto: El usuario quiere evitar gente. 
+    Contexto: El usuario quiere evitar gente y encontrar el momento más tranquilo. 
     Tarea:
     1. Identifica la 'Ventana de Oportunidad' (donde el aforo es más bajo y estable).
     2. Genera una 'Hora de Oro' que NO sea exacta (ej: 14:25 en lugar de 14:00) basándote en cuándo empieza a bajar el flujo.
-    3. Explica la diferencia entre la media y la mediana detectada.
-    4. Evalúa la estabilidad (si los lunes son siempre iguales o varían mucho).
+    3. Explica brevemente la diferencia entre la media y la mediana detectada en los datos.
+    4. Evalúa la estabilidad basándote en que estos son promedios.
+    
+    Responde estrictamente en formato JSON siguiendo el esquema proporcionado.
   `;
 
-  // Upgrading to gemini-3-pro-preview for complex reasoning and interpretation of statistical gym data
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
     contents: prompt,
@@ -64,11 +63,10 @@ export const analyzeGymData = async (data: AforoEntry[], currentDay: string): Pr
   });
 
   try {
-    // Access the text property directly on the GenerateContentResponse object
     const text = response.text;
-    if (!text) throw new Error("Empty AI response");
+    if (!text) throw new Error("Respuesta vacía de la IA");
     return JSON.parse(text);
   } catch (e) {
-    throw new Error("Invalid AI response format");
+    throw new Error("Formato de respuesta inválido");
   }
 };
