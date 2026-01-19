@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   BarChart3,
   Dices,
-  Target
+  Target,
+  AlertTriangle
 } from 'lucide-react';
 import { AforoEntry, PredictionResult } from './types';
 import { analyzeGymData } from './services/geminiService';
@@ -54,13 +55,8 @@ const App: React.FC = () => {
         const hour = timeParts[0];
         const min = timeParts[1] || 0;
         
-        // FILTRADO DE CALIDAD: Solo horario operativo real (7:10 a 22:50)
-        if (hour < 7 || (hour === 7 && min < 10)) return null;
-        if (hour > 22 || (hour === 22 && min > 50)) return null;
-
         const date = new Date(y, m - 1, d, hour, min);
         let dayName = new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(date);
-        // Normalizar "Luness" a "Lunes"
         dayName = dayName.replace(/ss$/, 's');
         
         return {
@@ -70,21 +66,28 @@ const App: React.FC = () => {
           hour: hour
         };
       } catch (e) { return null; }
-    }).filter((d): d is AforoEntry => d !== null && d.occupancy > 5); 
+    }).filter((d): d is AforoEntry => d !== null && d.occupancy > 2); 
   };
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`${SHEET_URL}&t=${Date.now()}`);
+      if (!response.ok) throw new Error("Error en red");
       const text = await response.text();
       const parsed = parseCSV(text);
       if (parsed.length > 0) {
         setRawData(parsed);
         setLastSync(new Date());
+        setError(null);
+      } else {
+        setError("No hay datos disponibles en el archivo");
       }
-    } catch (err) { setError("Fallo de conexión"); }
-    finally { setIsLoading(false); }
+    } catch (err) { 
+      setError("Fallo al conectar con Google Sheets"); 
+    } finally { 
+      setIsLoading(false); 
+    }
   }, []);
 
   useEffect(() => {
@@ -118,14 +121,10 @@ const App: React.FC = () => {
     const squareDiffs = values.map(v => Math.pow(v - meanValue, 2));
     const stdDevValue = Math.sqrt(squareDiffs.reduce((a, b) => a + b, 0) / values.length);
 
-    const dayHistory = rawData.filter(d => d.dayOfWeek.toLowerCase() === selectedDay.toLowerCase());
-    const absoluteMax = dayHistory.reduce((prev, curr) => (curr.occupancy > prev.occupancy ? curr : prev), dayHistory[0]);
-    const absoluteMin = dayHistory.reduce((prev, curr) => (curr.occupancy < prev.occupancy ? curr : prev), dayHistory[0]);
-
     const sortedByOcc = [...filteredData].sort((a, b) => a.occupancy - b.occupancy);
-    const bestHour = sortedByOcc[0].hour;
+    const bestHour = sortedByOcc[0]?.hour || 14;
     const nextHour = filteredData.find(f => f.hour === bestHour + 1);
-    const trendDir = (nextHour?.occupancy || 0) > sortedByOcc[0].occupancy ? 'up' : 'down';
+    const trendDir = (nextHour?.occupancy || 0) > (sortedByOcc[0]?.occupancy || 0) ? 'up' : 'down';
     const nonExactHour = `${bestHour}:${trendDir === 'up' ? '15' : '45'}`;
 
     return { 
@@ -133,176 +132,220 @@ const App: React.FC = () => {
       median: medianValue, 
       p25: p25Value, 
       stdDev: Math.round(stdDevValue), 
-      max: absoluteMax?.occupancy, 
-      maxDate: absoluteMax?.timestamp,
-      min: absoluteMin?.occupancy, 
-      minDate: absoluteMin?.timestamp,
+      max: values[values.length-1], 
+      min: values[0], 
       golden: nonExactHour
     };
-  }, [filteredData, rawData, selectedDay]);
+  }, [filteredData]);
 
   const stabilityPercentage = useMemo(() => {
     if (!localStats) return 0;
-    return Math.max(0, 100 - localStats.stdDev);
+    return Math.max(0, Math.min(100, 100 - (localStats.stdDev * 2)));
   }, [localStats]);
 
   const runAiAnalysis = async () => {
+    if (!process.env.API_KEY) {
+      alert("Error: No se ha configurado la API_KEY en GitHub Secrets.");
+      return;
+    }
     setIsAnalyzing(true);
     try {
       const res = await analyzeGymData(rawData, selectedDay);
       setPrediction(res);
-    } catch (e) {} finally { setIsAnalyzing(false); }
+    } catch (e) {
+      alert("Error al conectar con la IA de Gemini");
+    } finally { 
+      setIsAnalyzing(false); 
+    }
   };
 
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="glass-panel p-8 rounded-3xl text-center max-w-md">
+          <AlertTriangle className="mx-auto text-amber-500 mb-4" size={48} />
+          <h2 className="text-xl font-bold mb-2">Error de Sincronización</h2>
+          <p className="text-slate-400 text-sm mb-6">{error}</p>
+          <button onClick={fetchData} className="px-6 py-2 bg-emerald-500 rounded-xl font-bold flex items-center gap-2 mx-auto">
+            <RefreshCw size={18} /> Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen pb-20 p-4 md:p-8 max-w-7xl mx-auto">
+    <div className="min-h-screen pb-20 p-4 md:p-8 max-w-7xl mx-auto animate-in fade-in duration-700">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400 uppercase tracking-tight">GymFlow Predictor</h1>
-          <p className="text-slate-400 text-sm">XFitness Abrantes • Análisis Estratégico de Aforo</p>
+          <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400 uppercase tracking-tight">GymFlow Predictor</h1>
+          <p className="text-slate-400 text-sm font-medium flex items-center gap-2">
+            XFitness Abrantes <span className="w-1 h-1 bg-slate-600 rounded-full"></span> 
+            {lastSync ? `Sincronizado ${lastSync.toLocaleTimeString()}` : 'Cargando datos...'}
+          </p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={fetchData} className="p-2 glass-panel rounded-xl hover:text-emerald-400 transition-colors">
+        <div className="flex gap-3 w-full md:w-auto">
+          <button onClick={fetchData} className="p-3 glass-panel rounded-2xl hover:text-emerald-400 transition-all active:scale-90">
             <RefreshCw size={20} className={isLoading ? 'animate-spin' : ''} />
           </button>
-          <button onClick={runAiAnalysis} className="px-6 py-2 bg-emerald-500 rounded-xl font-bold shadow-lg shadow-emerald-500/20 flex items-center gap-2 hover:bg-emerald-600 active:scale-95 transition-all">
-            <BrainCircuit size={18} /> Predecir {selectedDay}
+          <button 
+            onClick={runAiAnalysis} 
+            disabled={isAnalyzing || rawData.length === 0}
+            className="flex-1 md:flex-none px-6 py-3 bg-emerald-500 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 hover:bg-emerald-400 active:scale-95 transition-all disabled:opacity-50"
+          >
+            {isAnalyzing ? <RefreshCw size={18} className="animate-spin" /> : <BrainCircuit size={18} />}
+            <span>Analizar con IA</span>
           </button>
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="glass-panel p-6 rounded-3xl border-l-4 border-l-emerald-500 shadow-xl">
-          <p className="text-[10px] font-bold text-slate-500 uppercase mb-3 flex items-center gap-2"><Activity size={10}/> Aforo Actual</p>
-          <span className="text-4xl font-bold">{rawData[rawData.length-1]?.occupancy || '--'}%</span>
-        </div>
-        <div className="glass-panel p-6 rounded-3xl group relative overflow-hidden">
-          <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform">
-            <ShieldCheck size={80} />
+          <p className="text-[10px] font-bold text-slate-500 uppercase mb-3 flex items-center gap-2 tracking-widest"><Activity size={10}/> Aforo Actual</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-5xl font-black text-white">{rawData[rawData.length-1]?.occupancy || '--'}</span>
+            <span className="text-xl font-bold text-slate-500">%</span>
           </div>
-          <p className="text-[10px] font-bold text-slate-500 uppercase mb-3 flex items-center gap-2"><ShieldCheck size={10}/> Estabilidad {selectedDay}</p>
-          <div className="flex items-center gap-2">
-            <span className="text-4xl font-bold">{stabilityPercentage}%</span>
-            <div className={`p-1 rounded-md ${stabilityPercentage > 80 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
-              <Info size={14} />
+        </div>
+        <div className="glass-panel p-6 rounded-3xl relative overflow-hidden group">
+          <p className="text-[10px] font-bold text-slate-500 uppercase mb-3 flex items-center gap-2 tracking-widest"><ShieldCheck size={10}/> Estabilidad {selectedDay}</p>
+          <div className="flex items-center gap-3">
+            <span className="text-5xl font-black text-white">{stabilityPercentage}%</span>
+            <div className={`p-1.5 rounded-lg ${stabilityPercentage > 75 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+              <Zap size={16} fill="currentColor" />
             </div>
           </div>
-          <p className={`text-[9px] font-bold mt-2 ${stabilityPercentage > 80 ? 'text-emerald-400' : 'text-amber-400'}`}>
-            {stabilityPercentage > 80 ? '✓ ALTA FIABILIDAD' : '⚠ DÍA VOLÁTIL'}
+          <p className={`text-[10px] font-bold mt-2 tracking-wide ${stabilityPercentage > 75 ? 'text-emerald-400' : 'text-amber-400'}`}>
+            {stabilityPercentage > 75 ? 'ALTA CONFIANZA' : 'PRECISIÓN MEDIA'}
           </p>
         </div>
-        <div className="glass-panel p-6 rounded-3xl border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-500/5 to-transparent">
-          <p className="text-[10px] font-bold text-slate-500 uppercase mb-3 flex items-center gap-2"><Trophy size={10} className="text-purple-400"/> Hora de Oro</p>
-          <span className="text-4xl font-bold text-purple-400">{prediction?.goldenHour || localStats?.golden || '--:--'}</span>
+        <div className="glass-panel p-6 rounded-3xl border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-500/10 to-transparent">
+          <p className="text-[10px] font-bold text-slate-400 uppercase mb-3 flex items-center gap-2 tracking-widest"><Trophy size={10} className="text-purple-400"/> Hora de Oro</p>
+          <span className="text-5xl font-black text-purple-400">{prediction?.goldenHour || localStats?.golden || '--:--'}</span>
+          <p className="text-[10px] text-purple-300/60 mt-2 font-medium">Basado en históricos de {selectedDay}</p>
         </div>
-        <div className="glass-panel p-6 rounded-3xl">
-          <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Día de consulta:</p>
-          <select value={selectedDay} onChange={(e)=>setSelectedDay(e.target.value)} className="w-full bg-slate-800 p-2 rounded-lg font-bold text-sm outline-none border border-slate-700 hover:border-emerald-500 transition-colors">
+        <div className="glass-panel p-6 rounded-3xl border border-slate-700/50">
+          <p className="text-[10px] font-bold text-slate-500 uppercase mb-2 tracking-widest">Cambiar consulta:</p>
+          <select 
+            value={selectedDay} 
+            onChange={(e)=>setSelectedDay(e.target.value)} 
+            className="w-full bg-slate-800/80 p-3 rounded-2xl font-bold text-sm outline-none border border-slate-700 hover:border-emerald-500/50 transition-all appearance-none cursor-pointer"
+          >
             {['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map(d=><option key={d} value={d}>{d}</option>)}
           </select>
+          <p className="text-[9px] text-slate-500 mt-2 text-center font-medium">Mostrando promedios históricos</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <div className="glass-panel p-8 rounded-3xl shadow-2xl">
-            <h2 className="text-xl font-bold flex items-center gap-2 mb-6"><TrendingUp size={20} className="text-emerald-400" /> Curva de Ocupación Promedio</h2>
-            <OccupancyLineChart data={filteredData} title={`Afluencia típica de los ${selectedDay}`} />
+          <div className="glass-panel p-8 rounded-[2rem] shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full -mr-16 -mt-16"></div>
+            <h2 className="text-xl font-bold flex items-center gap-2 mb-8"><TrendingUp size={22} className="text-emerald-400" /> Curva de Afluencia Típica</h2>
+            <OccupancyLineChart data={filteredData} title={`${selectedDay} (Basado en últimos 30 días)`} />
           </div>
 
-          <div className="glass-panel p-8 rounded-3xl">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-blue-400"><BarChart3 size={20} /> Análisis Profundo ({selectedDay})</h2>
+          <div className="glass-panel p-8 rounded-[2rem] border border-slate-800/50">
+            <h2 className="text-xl font-bold mb-8 flex items-center gap-2 text-cyan-400"><BarChart3 size={22} /> Análisis de Datos ({selectedDay})</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="bg-slate-800/50 p-5 rounded-2xl flex-1 border border-slate-700">
-                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Media</p>
-                    <p className="text-3xl font-bold">{localStats?.mean}%</p>
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/50">
+                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1 tracking-wider">Media</p>
+                    <p className="text-4xl font-black text-white">{localStats?.mean}%</p>
                   </div>
-                  <div className="bg-slate-800/50 p-5 rounded-2xl flex-1 border border-slate-700">
-                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Mediana</p>
-                    <p className="text-3xl font-bold">{localStats?.median}%</p>
+                  <div className="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/50">
+                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1 tracking-wider">Mediana</p>
+                    <p className="text-4xl font-black text-white">{localStats?.median}%</p>
                   </div>
                 </div>
-                <div className="p-5 bg-blue-500/5 rounded-2xl border border-blue-500/10">
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    <span className="font-bold text-blue-400">Interpretación:</span> Tu media ({localStats?.mean}%) es mayor que la mediana ({localStats?.median}%). Esto indica que los <span className="text-blue-400 font-bold">{selectedDay}</span> el gimnasio tiene <strong>picos breves</strong> que elevan el promedio, pero el 50% del tiempo el aforo real es inferior al {localStats?.median}%.
+                <div className="p-6 bg-cyan-500/5 rounded-2xl border border-cyan-500/10">
+                  <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                    <span className="font-extrabold text-cyan-400 mr-1">TIPS:</span> 
+                    Los <span className="text-cyan-400 font-bold">{selectedDay}</span> {localStats && localStats.mean > localStats.median ? 'el aforo es engañoso: hay picos muy altos que inflan la media.' : 'el flujo es muy constante durante todo el día.'}
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="bg-slate-800/50 p-5 rounded-2xl flex-1 border border-slate-700 relative overflow-hidden group">
-                    <Target className="absolute -right-2 -bottom-2 text-emerald-500/10 group-hover:scale-110 transition-transform" size={40} />
-                    <p className="text-[10px] text-emerald-400 font-bold uppercase mb-1 flex items-center gap-1"><ArrowDown size={10} /> Percentil 25</p>
-                    <p className="text-3xl font-bold text-emerald-400">{localStats?.p25}%</p>
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
+                    <Target className="absolute -right-2 -bottom-2 text-emerald-500/5 group-hover:scale-110 transition-transform" size={44} />
+                    <p className="text-[10px] text-emerald-400 font-bold uppercase mb-1 tracking-wider flex items-center gap-1"><ArrowDown size={10} /> P. 25</p>
+                    <p className="text-4xl font-black text-emerald-400">{localStats?.p25}%</p>
                   </div>
-                  <div className="bg-slate-800/50 p-5 rounded-2xl flex-1 border border-slate-700 relative overflow-hidden group">
-                    <Dices className="absolute -right-2 -bottom-2 text-amber-500/10 group-hover:scale-110 transition-transform" size={40} />
-                    <p className="text-[10px] text-amber-400 font-bold uppercase mb-1 flex items-center gap-1">Volatilidad</p>
-                    <p className="text-3xl font-bold text-amber-400">{localStats?.stdDev}%</p>
+                  <div className="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/50 relative overflow-hidden group">
+                    <Dices className="absolute -right-2 -bottom-2 text-amber-500/5 group-hover:scale-110 transition-transform" size={44} />
+                    <p className="text-[10px] text-amber-400 font-bold uppercase mb-1 tracking-wider">Varianza</p>
+                    <p className="text-4xl font-black text-amber-400">{localStats?.stdDev}%</p>
                   </div>
                 </div>
-                <div className="p-5 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 shadow-inner">
+                <div className="p-6 bg-slate-900/60 rounded-2xl border border-slate-800 shadow-inner">
                   <div className="flex items-start gap-3">
-                    <HelpCircle className="text-emerald-400 shrink-0 mt-1" size={16} />
-                    <div className="text-xs text-slate-200 leading-relaxed space-y-3">
-                      <div>
-                        <span className="font-bold text-emerald-400 block mb-1">Percentil 25 ({localStats?.p25}%): Tu apuesta segura</span>
-                        Indica que el 25% de los registros históricos están por debajo de este valor. Si el aforo actual se acerca a este número, es el momento perfecto para ir.
-                      </div>
-                      <div>
-                        <span className="font-bold text-amber-400 block mb-1">Volatilidad ({localStats?.stdDev}%): El factor riesgo</span>
-                        Mide cuánto varía el aforo de una semana a otra. Una volatilidad baja {"(< 15)"} significa que los datos son muy fiables. Una alta {"(> 20)"} indica que hoy podría ser un día "raro".
-                      </div>
+                    <HelpCircle className="text-slate-500 shrink-0 mt-0.5" size={16} />
+                    <div className="text-[11px] text-slate-400 leading-relaxed space-y-2">
+                      <p><strong className="text-emerald-400">Percentil 25:</strong> Indica que el 25% de las veces estarás por debajo de este aforo. Es el valor ideal para ir tranquilo.</p>
+                      <p><strong className="text-amber-400">Varianza:</strong> Si es baja {"(<12%)"}, el gimnasio se comporta igual todos los {selectedDay}.</p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          
-          <div className="glass-panel p-6 rounded-3xl border border-blue-500/10 bg-blue-500/5">
-            <h3 className="text-sm font-bold text-blue-400 uppercase mb-4 flex items-center gap-2"><Info size={16}/> Guía de Fiabilidad de la Estabilidad</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-              <div className="p-4 bg-slate-900/50 rounded-xl border border-emerald-500/20">
-                <p className="font-bold text-emerald-400 mb-2">{" > 85%"} - Muy Fiable</p>
-                <p className="text-slate-400">Los datos son consistentes semana tras semana. Puedes confiar plenamente en las predicciones para planificar tu rutina.</p>
-              </div>
-              <div className="p-4 bg-slate-900/50 rounded-xl border border-amber-500/20">
-                <p className="font-bold text-amber-400 mb-2">70% a 85% - Moderado</p>
-                <p className="text-slate-400">Hay variaciones ocasionales. Te recomendamos usar el Percentil 25 como tu guía principal para asegurar hueco.</p>
-              </div>
-              <div className="p-4 bg-slate-900/50 rounded-xl border border-red-500/20">
-                <p className="font-bold text-red-400 mb-2">{" < 70%"} - Poco Fiable</p>
-                <p className="text-slate-400">Mucha varianza histórica. Los datos pueden fallar hoy; consulta el aforo en tiempo real antes de salir de casa.</p>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <div className="glass-panel p-8 rounded-3xl h-fit border border-emerald-500/20 sticky top-8 shadow-2xl">
-          <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-emerald-400"><BrainCircuit size={20} /> IA Predictiva Gemini</h2>
-          {prediction ? (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-              <div className="bg-emerald-500/10 p-6 rounded-2xl border border-emerald-500/20 shadow-inner">
-                <p className="text-lg font-bold text-emerald-100 leading-snug">{prediction.recommendation}</p>
-              </div>
-              <p className="text-sm text-slate-400 italic leading-relaxed border-l-2 border-slate-700 pl-4">"{prediction.analysis}"</p>
-              <div className="pt-6 border-t border-slate-700 flex justify-between items-center text-xs">
-                <span className="text-slate-500 font-bold uppercase tracking-widest">Estado hoy</span>
-                <span className={`px-4 py-1.5 rounded-full font-bold shadow-sm ${prediction.statistics.trend === 'down' ? 'text-emerald-400 bg-emerald-400/10' : 'text-red-400 bg-red-400/10'}`}>
-                  {prediction.statistics.trend === 'down' ? 'RECOMENDADO' : 'EVITAR PICOS'}
-                </span>
-              </div>
+        <div className="space-y-6">
+          <div className="glass-panel p-8 rounded-[2.5rem] h-fit border border-emerald-500/20 sticky top-8 shadow-2xl bg-gradient-to-b from-emerald-500/[0.03] to-transparent">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-bold flex items-center gap-2 text-emerald-400"><BrainCircuit size={22} /> Predicción IA</h2>
+              <div className="px-2 py-1 bg-emerald-500/10 rounded-md text-[9px] font-black text-emerald-400 tracking-tighter uppercase">Gemini 3 Pro</div>
             </div>
-          ) : (
-            <div className="py-16 text-center text-slate-500 border border-dashed border-slate-800 rounded-2xl">
-              <Zap className="mx-auto mb-4 text-slate-800 animate-pulse" size={48} />
-              <p className="text-sm px-4">Pulsa en "Predecir {selectedDay}" para que la IA detecte si hoy es un día óptimo para entrenar.</p>
+            
+            {prediction ? (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="bg-slate-900/80 p-6 rounded-3xl border border-emerald-500/20 relative overflow-hidden group">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                  <p className="text-base font-bold text-white leading-relaxed">{prediction.recommendation}</p>
+                </div>
+                
+                <div className="relative p-6 bg-slate-800/30 rounded-3xl border border-slate-700/50">
+                  <p className="text-xs text-slate-400 italic leading-relaxed">
+                    <span className="text-slate-600 text-lg font-serif">"</span>
+                    {prediction.analysis}
+                    <span className="text-slate-600 text-lg font-serif">"</span>
+                  </p>
+                </div>
+
+                <div className="pt-6 border-t border-slate-800/50 flex justify-between items-center">
+                  <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Estado</span>
+                  <div className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full font-bold text-[11px] shadow-sm ${prediction.statistics.trend === 'down' ? 'text-emerald-400 bg-emerald-400/10' : 'text-rose-400 bg-rose-400/10'}`}>
+                    <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${prediction.statistics.trend === 'down' ? 'bg-emerald-400' : 'bg-rose-400'}`}></div>
+                    {prediction.statistics.trend === 'down' ? 'HORARIO ÓPTIMO' : 'ALTA AFLUENCIA'}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="py-20 text-center space-y-4">
+                <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700/50 group-hover:scale-110 transition-transform">
+                  <Zap className="text-slate-600 group-hover:text-emerald-500 transition-colors" size={32} />
+                </div>
+                <p className="text-sm font-medium text-slate-400 px-8">Solicita a la IA que analice las tendencias de hoy para encontrar tu ventana de entrenamiento.</p>
+                {!process.env.API_KEY && (
+                  <div className="mt-4 p-3 bg-rose-500/10 rounded-xl border border-rose-500/20 text-[10px] text-rose-400 font-bold uppercase flex items-center gap-2 justify-center">
+                    <AlertTriangle size={12}/> API_KEY No detectada
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className="glass-panel p-6 rounded-3xl border border-slate-800/50 text-[10px] text-slate-500 flex items-center justify-between">
+            <span className="font-bold uppercase tracking-widest">Version 1.2.0</span>
+            <div className="flex gap-4">
+              <a href="#" className="hover:text-emerald-400">Documentación</a>
+              <a href="#" className="hover:text-emerald-400">Privacidad</a>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
