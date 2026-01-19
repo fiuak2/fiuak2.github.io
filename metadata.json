@@ -1,0 +1,5 @@
+{
+  "name": "GymFlow Predictor - XFitness Abrantes",
+  "description": "An intelligent gym occupancy analyzer and predictor using Gemini AI to find your perfect workout time based on historical data.",
+  "requestFramePermissions": []
+}
