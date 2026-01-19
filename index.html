@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GymFlow Predictor</title>
+    <title>GymFlow Predictor | XFitness Abrantes</title>
     
     <!-- iOS Web App Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,25 +12,31 @@
     <meta name="apple-mobile-web-app-title" content="GymFlow">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3043/3043230.png">
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #0f172a;
+        }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0f172a;
+            background-color: var(--bg-color);
             color: #f8fafc;
             margin: 0;
             padding: 0;
-            overscroll-behavior-y: contain;
+            overflow-x: hidden;
         }
         #root {
             min-height: 100vh;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
         }
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        /* Pre-loader simple para evitar el flash azul */
+        .loading-screen {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color);
         }
     </style>
 <script type="importmap">
@@ -49,7 +55,17 @@
 </script>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">
+        <div class="loading-screen">
+            <div style="text-align: center;">
+                <div style="width: 40px; height: 40px; border: 3px solid #10b981; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                <p style="color: #64748b; font-size: 14px; font-weight: 500;">Iniciando GymFlow...</p>
+            </div>
+        </div>
+    </div>
     <script type="module" src="/index.tsx"></script>
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 </body>
 </html>
