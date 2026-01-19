@@ -16,7 +16,8 @@ import {
   BarChart3,
   Dices,
   Target,
-  AlertTriangle
+  AlertTriangle,
+  ExternalLink
 } from 'lucide-react';
 import { AforoEntry, PredictionResult } from './types';
 import { analyzeGymData } from './services/geminiService';
@@ -144,16 +145,13 @@ const App: React.FC = () => {
   }, [localStats]);
 
   const runAiAnalysis = async () => {
-    if (!process.env.API_KEY) {
-      alert("Error: No se ha configurado la API_KEY en GitHub Secrets.");
-      return;
-    }
     setIsAnalyzing(true);
     try {
       const res = await analyzeGymData(rawData, selectedDay);
       setPrediction(res);
-    } catch (e) {
-      alert("Error al conectar con la IA de Gemini");
+    } catch (e: any) {
+      console.error("AI Analysis Error:", e);
+      alert("Error al conectar con la IA de Gemini. Verifica tu conexión.");
     } finally { 
       setIsAnalyzing(false); 
     }
@@ -194,7 +192,7 @@ const App: React.FC = () => {
             className="flex-1 md:flex-none px-6 py-3 bg-emerald-500 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 hover:bg-emerald-400 active:scale-95 transition-all disabled:opacity-50"
           >
             {isAnalyzing ? <RefreshCw size={18} className="animate-spin" /> : <BrainCircuit size={18} />}
-            <span>Analizar con IA</span>
+            <span>{prediction ? 'Actualizar Análisis' : 'Analizar con IA'}</span>
           </button>
         </div>
       </header>
@@ -325,22 +323,19 @@ const App: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="py-20 text-center space-y-4">
-                <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700/50 group-hover:scale-110 transition-transform">
-                  <Zap className="text-slate-600 group-hover:text-emerald-500 transition-colors" size={32} />
+              <div className="py-12 text-center space-y-6">
+                <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700/50">
+                  <Zap className="text-slate-600" size={32} />
                 </div>
-                <p className="text-sm font-medium text-slate-400 px-8">Solicita a la IA que analice las tendencias de hoy para encontrar tu ventana de entrenamiento.</p>
-                {!process.env.API_KEY && (
-                  <div className="mt-4 p-3 bg-rose-500/10 rounded-xl border border-rose-500/20 text-[10px] text-rose-400 font-bold uppercase flex items-center gap-2 justify-center">
-                    <AlertTriangle size={12}/> API_KEY No detectada
-                  </div>
-                )}
+                <p className="text-sm font-medium text-slate-400 px-8">
+                  {isAnalyzing ? 'Calculando predicción...' : "Pulsa 'Analizar con IA' para obtener recomendaciones personalizadas."}
+                </p>
               </div>
             )}
           </div>
           
           <div className="glass-panel p-6 rounded-3xl border border-slate-800/50 text-[10px] text-slate-500 flex items-center justify-between">
-            <span className="font-bold uppercase tracking-widest">Version 1.2.0</span>
+            <span className="font-bold uppercase tracking-widest">Version 1.3.0</span>
             <div className="flex gap-4">
               <a href="#" className="hover:text-emerald-400">Documentación</a>
               <a href="#" className="hover:text-emerald-400">Privacidad</a>
