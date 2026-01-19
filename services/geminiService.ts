@@ -3,6 +3,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { AforoEntry, PredictionResult } from "../types";
 
 export const analyzeGymData = async (data: AforoEntry[], currentDay: string): Promise<PredictionResult> => {
+  // Always initialize a new GoogleGenAI instance using the API key from environment variables
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   // Filtrar datos válidos (>5% para evitar cierres y horario real)
@@ -30,8 +31,9 @@ export const analyzeGymData = async (data: AforoEntry[], currentDay: string): Pr
     4. Evalúa la estabilidad (si los lunes son siempre iguales o varían mucho).
   `;
 
+  // Upgrading to gemini-3-pro-preview for complex reasoning and interpretation of statistical gym data
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-3-pro-preview',
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -51,18 +53,22 @@ export const analyzeGymData = async (data: AforoEntry[], currentDay: string): Pr
               max: { type: Type.NUMBER },
               min: { type: Type.NUMBER },
               bestHour: { type: Type.STRING },
-              trend: { type: Type.STRING }
+              trend: { type: Type.STRING, description: "Must be 'up', 'down', or 'stable'" }
             },
-            required: ["mean", "median", "stdDev", "trend"]
+            required: ["mean", "median", "percentile25", "stdDev", "max", "min", "bestHour", "trend"]
           }
-        }
+        },
+        required: ["recommendation", "goldenHour", "analysis", "statistics"]
       }
     }
   });
 
   try {
-    return JSON.parse(response.text || '{}');
+    // Access the text property directly on the GenerateContentResponse object
+    const text = response.text;
+    if (!text) throw new Error("Empty AI response");
+    return JSON.parse(text);
   } catch (e) {
-    throw new Error("Invalid AI response");
+    throw new Error("Invalid AI response format");
   }
 };

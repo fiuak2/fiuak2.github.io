@@ -8,9 +8,12 @@ export default defineConfig({
   define: {
     'process.env.API_KEY': JSON.stringify(process.env.API_KEY)
   },
+  // historyApiFallback is not a valid property for Vite's server configuration.
+  // Standard SPA routing is handled by default by the Vite development server.
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    sourcemap: false,
-  },
+    emptyOutDir: true,
+    sourcemap: false
+  }
 });
