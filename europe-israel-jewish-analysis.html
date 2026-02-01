@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Europa, Israel y la Diaspora Judia: Analisis de Correlaciones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-color: #0a0a1a; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 50%, #0a0a1a 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+            border-left: 4px solid #3b82f6;
+        }
+        .highlight-box-amber {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+            border-left: 4px solid #f59e0b;
+        }
+        .highlight-box-red {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+            border-left: 4px solid #ef4444;
+        }
+        .star-gradient { background: linear-gradient(135deg, #0038b8 0%, #f8fafc 50%, #0038b8 100%); }
+        .eu-gradient { background: linear-gradient(135deg, #003399 0%, #ffcc00 100%); }
+        .data-table { border-collapse: separate; border-spacing: 0; }
+        .data-table th, .data-table td { padding: 12px 16px; }
+        .data-table tr:hover { background: rgba(255,255,255,0.05); }
+        .chart-container { position: relative; height: 400px; }
+        .bar-fill { transition: width 1.5s ease-out; }
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; opacity: 0; }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        .correlation-high { color: #ef4444; }
+        .correlation-medium { color: #f59e0b; }
+        .correlation-low { color: #10b981; }
+        .scroll-table { max-height: 500px; overflow-y: auto; }
+        .scroll-table::-webkit-scrollbar { width: 6px; }
+        .scroll-table::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 3px; }
+        .scroll-table::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Header -->
+        <header class="text-center mb-12 fade-in">
+            <div class="inline-block p-1 rounded-2xl eu-gradient mb-6">
+                <div class="bg-slate-900 px-8 py-4 rounded-xl">
+                    <h1 class="text-3xl md:text-5xl font-black tracking-tight">
+                        <span class="text-blue-400">EUROPA</span>,
+                        <span class="text-white">ISRAEL</span> y la
+                        <span class="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400">DIASPORA JUDIA</span>
+                    </h1>
+                </div>
+            </div>
+            <p class="text-slate-400 text-lg max-w-3xl mx-auto">
+                Analisis de la relacion entre la poblacion judia en paises europeos y su apoyo diplomatico a Israel en la ONU, UE y otros organismos internacionales
+            </p>
+            <div class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/30 rounded-full text-blue-400 text-sm font-medium">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                Basado en datos oficiales de la ONU, Parlamento Europeo y fuentes demograficas
+            </div>
+        </header>
+
+        <!-- Key Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+            <div class="glass-panel p-6 rounded-2xl text-center">
+                <p class="text-4xl font-black text-blue-400">~1.1M</p>
+                <p class="text-xs text-slate-400 uppercase tracking-wider mt-2">Judios en Europa</p>
+                <p class="text-[10px] text-slate-500 mt-1">Poblacion core, 2024</p>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl text-center">
+                <p class="text-4xl font-black text-amber-400">27</p>
+                <p class="text-xs text-slate-400 uppercase tracking-wider mt-2">Paises UE</p>
+                <p class="text-[10px] text-slate-500 mt-1">Todos reconocen a Israel</p>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl text-center">
+                <p class="text-4xl font-black text-emerald-400">15</p>
+                <p class="text-xs text-slate-400 uppercase tracking-wider mt-2">Reconocen Palestina</p>
+                <p class="text-[10px] text-slate-500 mt-1">De 27 miembros UE</p>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl text-center border-2 border-red-500/50">
+                <p class="text-4xl font-black text-red-400">2</p>
+                <p class="text-xs text-slate-400 uppercase tracking-wider mt-2">Votan "No" en ONU</p>
+                <p class="text-[10px] text-red-400 mt-1">Hungria y Chequia</p>
+            </div>
+        </div>
+
+        <!-- Main Hypothesis Section -->
+        <div class="glass-panel p-8 rounded-3xl mb-12 highlight-box">
+            <h2 class="text-xl font-bold mb-4 text-blue-400 flex items-center gap-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                Hipotesis Central
+            </h2>
+            <p class="text-slate-300 text-sm leading-relaxed">
+                Se analiza si existe una correlacion estadistica entre el tamano de la poblacion judia en cada pais europeo y el nivel de apoyo diplomatico de dicho pais hacia Israel en organismos internacionales (ONU, UE, etc.). Los datos revelan que <span class="text-white font-bold">la relacion no es lineal ni directa</span>: paises con grandes comunidades judias (Francia, Reino Unido) votan frecuentemente contra Israel en la ONU, mientras que paises con comunidades muy pequenas (Chequia, Hungria) son sus mayores defensores. <span class="text-amber-400 font-bold">La ideologia politica del gobierno en turno emerge como el factor predictivo mas fuerte.</span>
+            </p>
+        </div>
+
+        <!-- Jewish Population Map & Chart -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <!-- Population Chart -->
+            <div class="glass-panel p-8 rounded-3xl">
+                <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                    <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    Poblacion Judia en Europa (2024)
+                </h2>
+                <div class="chart-container">
+                    <canvas id="populationChart"></canvas>
+                </div>
+                <p class="text-xs text-slate-500 mt-4 italic">
+                    Fuente: Prof. Sergio DellaPergola, American Jewish Year Book 2024
+                </p>
+            </div>
+
+            <!-- Population Table -->
+            <div class="glass-panel p-8 rounded-3xl">
+                <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                    <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                    </svg>
+                    Datos Demograficos Completos
+                </h2>
+                <div class="scroll-table">
+                    <table class="data-table w-full text-sm">
+                        <thead class="sticky top-0 bg-slate-800 z-10">
+                            <tr class="text-slate-400 text-xs uppercase tracking-wider border-b border-slate-700">
+                                <th class="text-left">Pais</th>
+                                <th class="text-right">Poblacion Judia</th>
+                                <th class="text-right">% Poblacion</th>
+                                <th class="text-center">Postura ONU</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-300">
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Francia</td>
+                                <td class="text-right text-amber-400 font-bold">438,500</td>
+                                <td class="text-right">0.65%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">A favor</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Reino Unido</td>
+                                <td class="text-right text-amber-400 font-bold">313,000</td>
+                                <td class="text-right">0.46%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded text-xs">Abstencion</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Alemania</td>
+                                <td class="text-right text-amber-400 font-bold">125,000</td>
+                                <td class="text-right">0.15%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded text-xs">Abstencion</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Hungria</td>
+                                <td class="text-right">45,000</td>
+                                <td class="text-right">0.46%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded text-xs">En contra</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Paises Bajos</td>
+                                <td class="text-right">35,000</td>
+                                <td class="text-right">0.20%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded text-xs">Abstencion</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Belgica</td>
+                                <td class="text-right">29,000</td>
+                                <td class="text-right">0.25%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">A favor</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Italia</td>
+                                <td class="text-right">26,800</td>
+                                <td class="text-right">0.05%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded text-xs">Abstencion</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Suiza</td>
+                                <td class="text-right">20,500</td>
+                                <td class="text-right">0.23%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded text-xs">Abstencion</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Suecia</td>
+                                <td class="text-right">14,900</td>
+                                <td class="text-right">0.14%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">A favor</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Espana</td>
+                                <td class="text-right">13,000</td>
+                                <td class="text-right">0.03%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">A favor</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Austria</td>
+                                <td class="text-right">10,300</td>
+                                <td class="text-right">0.11%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded text-xs">Abstencion</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Rumania</td>
+                                <td class="text-right">9,400</td>
+                                <td class="text-right">0.05%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded text-xs">Abstencion</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Polonia</td>
+                                <td class="text-right">8,000</td>
+                                <td class="text-right">0.02%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded text-xs">Abstencion</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Dinamarca</td>
+                                <td class="text-right">6,400</td>
+                                <td class="text-right">0.11%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded text-xs">Abstencion</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Grecia</td>
+                                <td class="text-right">4,500</td>
+                                <td class="text-right">0.04%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">A favor</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Chequia</td>
+                                <td class="text-right">3,900</td>
+                                <td class="text-right">0.04%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded text-xs">En contra</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Irlanda</td>
+                                <td class="text-right">1,600</td>
+                                <td class="text-right">0.03%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">A favor</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Finlandia</td>
+                                <td class="text-right">1,300</td>
+                                <td class="text-right">0.02%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">A favor</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-800">
+                                <td class="font-medium">Noruega</td>
+                                <td class="text-right">1,300</td>
+                                <td class="text-right">0.02%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">A favor</span></td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium">Portugal</td>
+                                <td class="text-right">600</td>
+                                <td class="text-right">0.01%</td>
+                                <td class="text-center"><span class="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">A favor</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-xs text-slate-500 mt-4 italic">
+                    Postura ONU: voto en resolucion sept. 2024 exigiendo fin de presencia israeli. "En contra" = pro-Israel.
+                </p>
+            </div>
+        </div>
+
+        <!-- Scatter Plot: Population vs Support -->
+        <div class="glass-panel p-8 rounded-3xl mb-12">
+            <h2 class="text-xl font-bold mb-2 flex items-center gap-3">
+                <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                </svg>
+                Poblacion Judia vs. Nivel de Apoyo a Israel (Scatter Plot)
+            </h2>
+            <p class="text-sm text-slate-400 mb-6">Cada punto representa un pais europeo. Eje X: poblacion judia (log). Eje Y: nivel de apoyo (1=vota contra Israel, 2=abstencion, 3=vota pro-Israel).</p>
+            <div class="chart-container" style="height: 450px;">
+                <canvas id="scatterChart"></canvas>
+            </div>
+            <div class="mt-6 p-4 bg-slate-800/50 rounded-xl">
+                <p class="text-sm text-slate-300">
+                    <span class="text-cyan-400 font-bold">Hallazgo clave:</span> No se observa una correlacion positiva clara entre tamano de la poblacion judia y apoyo gubernamental a Israel en la ONU. Francia (438,500 judios) vota sistematicamente a favor de resoluciones criticas con Israel, mientras que Chequia (3,900 judios) es uno de sus dos unicos defensores en la UE.
+                </p>
+            </div>
+        </div>
+
+        <!-- UN Voting Analysis -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <!-- Most Pro-Israel -->
+            <div class="glass-panel p-8 rounded-3xl">
+                <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                    <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Mas Pro-Israel en Europa
+                </h2>
+                <div class="space-y-4">
+                    <div class="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-emerald-400">Chequia</span>
+                            <span class="text-xs px-2 py-1 bg-emerald-500/20 rounded font-bold">3,900 judios</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Vota "No" en resoluciones anti-Israel. Solo 0.04% de poblacion judia. Gobierno de centro-derecha. Lazo ideologico fuerte con EE.UU. e Israel.</p>
+                        <div class="mt-2 flex items-center gap-2">
+                            <div class="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-emerald-500 rounded-full bar-fill" style="width: 95%"></div>
+                            </div>
+                            <span class="text-xs text-emerald-400 font-bold">95%</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1">Nivel de apoyo en Parlamento Europeo (ECI)</p>
+                    </div>
+                    <div class="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-emerald-400">Hungria</span>
+                            <span class="text-xs px-2 py-1 bg-emerald-500/20 rounded font-bold">45,000 judios</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Vota "No" en resoluciones anti-Israel. Orban mantiene lazos estrechos con Netanyahu. Gobierno de derecha nacionalista.</p>
+                        <div class="mt-2 flex items-center gap-2">
+                            <div class="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-emerald-500 rounded-full bar-fill" style="width: 90%"></div>
+                            </div>
+                            <span class="text-xs text-emerald-400 font-bold">90%</span>
+                        </div>
+                    </div>
+                    <div class="bg-slate-800/50 p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-slate-300">Austria</span>
+                            <span class="text-xs px-2 py-1 bg-slate-600/50 rounded">10,300 judios</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Abstencion sistematica. Se opuso a resoluciones clave en 2023. Tendencia pro-Israel bajo gobiernos conservadores.</p>
+                        <div class="mt-2 flex items-center gap-2">
+                            <div class="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-blue-500 rounded-full bar-fill" style="width: 75%"></div>
+                            </div>
+                            <span class="text-xs text-blue-400 font-bold">75%</span>
+                        </div>
+                    </div>
+                    <div class="bg-slate-800/50 p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-slate-300">Alemania</span>
+                            <span class="text-xs px-2 py-1 bg-slate-600/50 rounded">125,000 judios</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Abstencion frecuente por "responsabilidad historica". No reconoce Palestina. 72% coincidencia con EE.UU.</p>
+                        <div class="mt-2 flex items-center gap-2">
+                            <div class="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-blue-500 rounded-full bar-fill" style="width: 70%"></div>
+                            </div>
+                            <span class="text-xs text-blue-400 font-bold">70%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Least Pro-Israel -->
+            <div class="glass-panel p-8 rounded-3xl">
+                <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                    <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Menos Pro-Israel en Europa
+                </h2>
+                <div class="space-y-4">
+                    <div class="bg-red-500/10 border border-red-500/30 p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-red-400">Irlanda</span>
+                            <span class="text-xs px-2 py-1 bg-red-500/20 rounded font-bold">1,600 judios</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Solo 14.6% pro-Israel en PE (el mas bajo de la UE). Reconocio Palestina en mayo 2024. Identidad postcolonial influye en su postura.</p>
+                        <div class="mt-2 flex items-center gap-2">
+                            <div class="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-red-500 rounded-full bar-fill" style="width: 14.6%"></div>
+                            </div>
+                            <span class="text-xs text-red-400 font-bold">14.6%</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1">% de votos pro-Israel en Parlamento Europeo</p>
+                    </div>
+                    <div class="bg-red-500/10 border border-red-500/30 p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-red-400">Espana</span>
+                            <span class="text-xs px-2 py-1 bg-red-500/20 rounded font-bold">13,000 judios</span>
+                        </div>
+                        <p class="text-xs text-slate-400">26% pro-Israel en PE. Reconocio Palestina mayo 2024. Podemos (socio de gobierno) puntuo 0% pro-Israel.</p>
+                        <div class="mt-2 flex items-center gap-2">
+                            <div class="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-red-500 rounded-full bar-fill" style="width: 26%"></div>
+                            </div>
+                            <span class="text-xs text-red-400 font-bold">26%</span>
+                        </div>
+                    </div>
+                    <div class="bg-red-500/10 border border-red-500/30 p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-red-400">Belgica</span>
+                            <span class="text-xs px-2 py-1 bg-red-500/20 rounded font-bold">29,000 judios</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Vota consistentemente a favor de resoluciones criticas con Israel pese a tener la 6a mayor comunidad judia de Europa.</p>
+                        <div class="mt-2 flex items-center gap-2">
+                            <div class="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-red-500 rounded-full bar-fill" style="width: 30%"></div>
+                            </div>
+                            <span class="text-xs text-red-400 font-bold">~30%</span>
+                        </div>
+                    </div>
+                    <div class="bg-slate-800/50 p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-slate-300">Eslovenia</span>
+                            <span class="text-xs px-2 py-1 bg-slate-600/50 rounded">~100 judios</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Reconocio Palestina junio 2024. Vota a favor de resoluciones criticas. Una de las comunidades judias mas pequenas.</p>
+                        <div class="mt-2 flex items-center gap-2">
+                            <div class="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-red-500 rounded-full bar-fill" style="width: 20%"></div>
+                            </div>
+                            <span class="text-xs text-red-400 font-bold">~20%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EU Parliament Voting -->
+        <div class="glass-panel p-8 rounded-3xl mb-12">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+                Votacion en el Parlamento Europeo sobre Israel (71 votos, 2019-2022)
+            </h2>
+            <p class="text-sm text-slate-400 mb-6">Ranking de la European Coalition for Israel (ECI): porcentaje de votos pro-Israel por grupo politico y por nacionalidad de los eurodiputados.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- By Political Group -->
+                <div>
+                    <h3 class="text-lg font-bold text-purple-400 mb-4">Por Grupo Politico</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-300">ECR (Conservadores)</span>
+                                <span class="text-emerald-400 font-bold">~90%</span>
+                            </div>
+                            <div class="h-3 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-300">ID (Identidad y Democracia)</span>
+                                <span class="text-emerald-400 font-bold">~88%</span>
+                            </div>
+                            <div class="h-3 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full" style="width: 88%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-300">EPP (Partido Popular Europeo)</span>
+                                <span class="text-blue-400 font-bold">~60%</span>
+                            </div>
+                            <div class="h-3 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full" style="width: 60%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-300">Renew (Liberales)</span>
+                                <span class="text-amber-400 font-bold">~45%</span>
+                            </div>
+                            <div class="h-3 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full" style="width: 45%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-300">S&D (Socialistas)</span>
+                                <span class="text-red-400 font-bold">~18%</span>
+                            </div>
+                            <div class="h-3 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-red-600 to-red-400 rounded-full" style="width: 18%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-300">Verdes / ALE</span>
+                                <span class="text-red-400 font-bold">~12%</span>
+                            </div>
+                            <div class="h-3 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-red-600 to-red-400 rounded-full" style="width: 12%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-slate-300">The Left (GUE/NGL)</span>
+                                <span class="text-red-400 font-bold">~5%</span>
+                            </div>
+                            <div class="h-3 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-red-600 to-red-400 rounded-full" style="width: 5%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- By Country -->
+                <div>
+                    <h3 class="text-lg font-bold text-cyan-400 mb-4">Por Nacionalidad del Eurodiputado</h3>
+                    <div class="chart-container" style="height: 350px;">
+                        <canvas id="euParliamentChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+                <p class="text-sm text-slate-300">
+                    <span class="text-purple-400 font-bold">Conclusion:</span> La ideologia politica del eurodiputado es un predictor mucho mas fuerte que su nacionalidad. Los grupos de derecha (ECR, ID) votan pro-Israel ~90% del tiempo, mientras que la izquierda (Verdes, The Left) lo hace menos del 12%.
+                </p>
+            </div>
+        </div>
+
+        <!-- Palestine Recognition Timeline -->
+        <div class="glass-panel p-8 rounded-3xl mb-12">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Cronologia: Reconocimiento de Palestina por Estados Europeos UE
+            </h2>
+            <div class="relative">
+                <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-orange-500 via-red-500 to-purple-500"></div>
+                <div class="space-y-6 ml-12">
+                    <div class="relative">
+                        <div class="absolute -left-10 w-4 h-4 bg-orange-500 rounded-full border-4 border-slate-900"></div>
+                        <div class="bg-slate-800/50 p-4 rounded-xl">
+                            <p class="text-xs text-orange-400 font-bold">1988</p>
+                            <p class="text-sm text-slate-300 mt-1"><span class="font-bold text-white">7 paises del bloque sovietico:</span> Bulgaria, Chequia, Polonia, Rumania, Eslovaquia, Hungria, Chipre. Reconocimiento en contexto de Guerra Fria, no por afinidad politica actual.</p>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute -left-10 w-4 h-4 bg-amber-500 rounded-full border-4 border-slate-900"></div>
+                        <div class="bg-slate-800/50 p-4 rounded-xl">
+                            <p class="text-xs text-amber-400 font-bold">2014</p>
+                            <p class="text-sm text-slate-300 mt-1"><span class="font-bold text-white">Suecia</span> se convierte en el primer pais en reconocer Palestina siendo ya miembro de la UE. Decision del gobierno socialdemocrata de Stefan Lofven.</p>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute -left-10 w-4 h-4 bg-red-500 rounded-full border-4 border-slate-900"></div>
+                        <div class="bg-slate-800/50 p-4 rounded-xl">
+                            <p class="text-xs text-red-400 font-bold">MAYO 2024</p>
+                            <p class="text-sm text-slate-300 mt-1"><span class="font-bold text-white">Irlanda, Espana y Noruega</span> reconocen Palestina simultaneamente. Oleada post-octubre 2023.</p>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute -left-10 w-4 h-4 bg-red-500 rounded-full border-4 border-slate-900"></div>
+                        <div class="bg-slate-800/50 p-4 rounded-xl">
+                            <p class="text-xs text-red-400 font-bold">JUNIO 2024</p>
+                            <p class="text-sm text-slate-300 mt-1"><span class="font-bold text-white">Eslovenia</span> reconoce Palestina.</p>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute -left-10 w-4 h-4 bg-purple-500 rounded-full border-4 border-slate-900"></div>
+                        <div class="bg-slate-800/50 p-4 rounded-xl">
+                            <p class="text-xs text-purple-400 font-bold">SEPTIEMBRE 2025</p>
+                            <p class="text-sm text-slate-300 mt-1"><span class="font-bold text-white">Francia, Portugal, Luxemburgo y Malta</span> reconocen Palestina. Francia es el pais con mayor poblacion judia de Europa (438,500).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 p-4 bg-slate-800/50 rounded-xl">
+                <p class="text-sm text-slate-300">
+                    <span class="text-orange-400 font-bold">Dato clave:</span> De los 15 paises UE que reconocen Palestina, Francia tiene la mayor comunidad judia (438,500). Esto contradice la hipotesis de que una mayor poblacion judia implica mayor apoyo a Israel.
+                </p>
+            </div>
+        </div>
+
+        <!-- UN Voting Shift -->
+        <div class="glass-panel p-8 rounded-3xl mb-12">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
+                </svg>
+                Erosion del Apoyo Europeo a Israel en la ONU (2017-2025)
+            </h2>
+            <p class="text-sm text-slate-400 mb-6">Evolucion del numero de paises europeos que se abstienen o votan contra resoluciones anti-Israel en la AGNU.</p>
+            <div class="chart-container" style="height: 350px;">
+                <canvas id="erosionChart"></canvas>
+            </div>
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="text-center p-4 bg-slate-800/50 rounded-xl">
+                    <p class="text-3xl font-black text-blue-400">8</p>
+                    <p class="text-xs text-slate-400 uppercase tracking-wider mt-1">Abstenciones UE (2017)</p>
+                </div>
+                <div class="text-center p-4 bg-slate-800/50 rounded-xl">
+                    <p class="text-3xl font-black text-amber-400">13</p>
+                    <p class="text-xs text-slate-400 uppercase tracking-wider mt-1">Abstenciones UE (2023)</p>
+                </div>
+                <div class="text-center p-4 bg-slate-800/50 rounded-xl border border-red-500/30">
+                    <p class="text-3xl font-black text-red-400">3</p>
+                    <p class="text-xs text-slate-400 uppercase tracking-wider mt-1">Abstenciones UE (2025)</p>
+                    <p class="text-[10px] text-red-400 mt-1">Chequia, Moldavia + 1 voto contra (Hungria)</p>
+                </div>
+            </div>
+            <div class="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+                <p class="text-sm text-slate-300">
+                    <span class="text-red-400 font-bold">Tendencia:</span> Israel perdio el apoyo pasivo (abstenciones) de ~15 paises europeos entre 2017 y 2025. Alemania, Italia, Paises Bajos, Polonia, Reino Unido y otros pasaron de abstenerse a votar a favor de resoluciones criticas. Solo Hungria y Chequia mantienen un apoyo activo.
+                </p>
+            </div>
+        </div>
+
+        <!-- Factors Analysis -->
+        <div class="glass-panel p-8 rounded-3xl mb-12">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Factores Determinantes del Apoyo a Israel (Segun la Literatura Academica)
+            </h2>
+            <p class="text-sm text-slate-400 mb-6">Peso relativo de cada factor en la determinacion de la postura de un pais europeo hacia Israel, segun estudios academicos publicados.</p>
+            <div class="chart-container" style="height: 350px;">
+                <canvas id="factorsChart"></canvas>
+            </div>
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-slate-800/50 p-4 rounded-xl border-l-4 border-purple-500">
+                    <h3 class="font-bold text-purple-400 text-sm mb-2">Ideologia Politica</h3>
+                    <p class="text-xs text-slate-400">Factor mas fuerte. Gobiernos de derecha/centro-derecha son significativamente mas pro-Israel. Relacion en forma de U: extremos mas interesados que el centro.</p>
+                    <p class="text-xs text-slate-500 mt-2 italic">Fuente: Vignoli (2025), JCMS</p>
+                </div>
+                <div class="bg-slate-800/50 p-4 rounded-xl border-l-4 border-blue-500">
+                    <h3 class="font-bold text-blue-400 text-sm mb-2">Relaciones Comerciales</h3>
+                    <p class="text-xs text-slate-400">La UE es el mayor socio comercial de Israel (32% del comercio total). Los paises con mayor exposicion comercial prestan mas atencion al conflicto.</p>
+                    <p class="text-xs text-slate-500 mt-2 italic">Fuente: EU Trade Data, Vignoli (2025)</p>
+                </div>
+                <div class="bg-slate-800/50 p-4 rounded-xl border-l-4 border-amber-500">
+                    <h3 class="font-bold text-amber-400 text-sm mb-2">Demografia Musulmana</h3>
+                    <p class="text-xs text-slate-400">Paises con mayores poblaciones musulmanas muestran mayor atencion al conflicto y tienden a ser mas criticos con Israel.</p>
+                    <p class="text-xs text-slate-500 mt-2 italic">Fuente: Vignoli (2025), JCMS</p>
+                </div>
+                <div class="bg-slate-800/50 p-4 rounded-xl border-l-4 border-emerald-500">
+                    <h3 class="font-bold text-emerald-400 text-sm mb-2">Experiencia Totalitaria</h3>
+                    <p class="text-xs text-slate-400">Paises de Europa Central/Oriental que vivieron regimenes totalitarios tienden a ser mas pro-Israel. Vinculado a alianza con EE.UU.</p>
+                    <p class="text-xs text-slate-500 mt-2 italic">Fuente: ECI (2022), Mandler & Lutmar (2021)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contradiction Cases -->
+        <div class="glass-panel p-8 rounded-3xl mb-12 highlight-box-amber">
+            <h2 class="text-xl font-bold mb-6 text-amber-400 flex items-center gap-3">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                Casos que Contradicen la Hipotesis "Mas Judios = Mas Apoyo a Israel"
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-slate-900/50 p-6 rounded-xl">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">🇫🇷</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white">Francia</h3>
+                            <p class="text-xs text-amber-400">438,500 judios</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-slate-400">Mayor comunidad judia de Europa. Sin embargo, vota sistematicamente a favor de resoluciones criticas con Israel en la ONU. Reconocio Palestina en septiembre 2025.</p>
+                    <div class="mt-3 p-2 bg-red-500/10 rounded text-center">
+                        <span class="text-xs text-red-400 font-bold">Contra la hipotesis</span>
+                    </div>
+                </div>
+                <div class="bg-slate-900/50 p-6 rounded-xl">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">🇧🇪</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white">Belgica</h3>
+                            <p class="text-xs text-amber-400">29,000 judios</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-slate-400">6a mayor comunidad judia de Europa. Pese a ello, vota consistentemente a favor de resoluciones anti-Israel y su delegado respalda las resoluciones como alineadas con la CIJ.</p>
+                    <div class="mt-3 p-2 bg-red-500/10 rounded text-center">
+                        <span class="text-xs text-red-400 font-bold">Contra la hipotesis</span>
+                    </div>
+                </div>
+                <div class="bg-slate-900/50 p-6 rounded-xl">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">🇨🇿</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white">Chequia</h3>
+                            <p class="text-xs text-emerald-400">3,900 judios</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-slate-400">Solo 3,900 judios (0.04% de poblacion). Sin embargo, es uno de los dos unicos paises de la UE que vota activamente contra resoluciones anti-Israel.</p>
+                    <div class="mt-3 p-2 bg-emerald-500/10 rounded text-center">
+                        <span class="text-xs text-emerald-400 font-bold">Contra la hipotesis (inversa)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Public Opinion -->
+        <div class="glass-panel p-8 rounded-3xl mb-12">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                Opinion Publica Europea sobre Israel (YouGov, Mayo 2025)
+            </h2>
+            <div class="chart-container" style="height: 350px;">
+                <canvas id="opinionChart"></canvas>
+            </div>
+            <div class="mt-6 p-4 bg-slate-800/50 rounded-xl">
+                <p class="text-sm text-slate-300">
+                    <span class="text-pink-400 font-bold">Contexto:</span> La favorabilidad publica hacia Israel ha alcanzado minimos historicos en toda Europa Occidental. Solo entre el 13% y 21% de los encuestados tiene una opinion positiva. Estos niveles de opinion publica presionan a los gobiernos hacia posturas mas criticas, independientemente del tamano de la comunidad judia local.
+                </p>
+            </div>
+        </div>
+
+        <!-- Conclusions -->
+        <div class="glass-panel p-8 rounded-3xl mb-12 border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/[0.03] to-transparent">
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-3 text-amber-400">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                Conclusiones del Analisis
+            </h2>
+            <div class="space-y-6">
+                <div class="flex items-start gap-4">
+                    <div class="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center shrink-0">
+                        <span class="text-red-400 font-bold">1</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white mb-1">No Existe Correlacion Directa Poblacion Judia-Apoyo a Israel</h3>
+                        <p class="text-sm text-slate-400">Los datos refutan la hipotesis de que un mayor numero de ciudadanos judios en un pais se traduce en mayor apoyo gubernamental a Israel. Francia (438,500 judios) y Belgica (29,000) votan consistentemente contra Israel, mientras que Chequia (3,900) y Hungria (45,000) son sus unicos defensores en la UE.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <div class="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center shrink-0">
+                        <span class="text-purple-400 font-bold">2</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white mb-1">La Ideologia Politica es el Factor Determinante</h3>
+                        <p class="text-sm text-slate-400">El predictor mas fuerte del apoyo a Israel es la orientacion politica del gobierno: los partidos de derecha y centro-derecha (ECR, ID) votan pro-Israel ~90% del tiempo en el PE, frente a menos del 12% de la izquierda (Verdes, The Left). Este patron se replica a nivel de gobierno nacional.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <div class="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center shrink-0">
+                        <span class="text-blue-400 font-bold">3</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white mb-1">El Factor Historico Pesa Mas que la Demografia</h3>
+                        <p class="text-sm text-slate-400">Alemania mantiene una postura de contencion por su "responsabilidad historica" con el Holocausto. Los paises ex-sovieticos que sufrieron regimenes totalitarios tienden a alinearse con EE.UU. e Israel por afinidad geostrategica. Irlanda se opone a Israel influida por su identidad postcolonial.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <div class="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center shrink-0">
+                        <span class="text-emerald-400 font-bold">4</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white mb-1">Tendencia General: Erosion Acelerada del Apoyo</h3>
+                        <p class="text-sm text-slate-400">Entre 2017 y 2025, Israel perdio el apoyo pasivo (abstenciones) de ~15 paises europeos. La opinion publica europea ha alcanzado minimos historicos de favorabilidad. Solo 2 de 27 paises UE mantienen un apoyo activo. 15 de 27 ya reconocen Palestina.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4">
+                    <div class="w-8 h-8 bg-amber-500/20 rounded-lg flex items-center justify-center shrink-0">
+                        <span class="text-amber-400 font-bold">5</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white mb-1">Vacio en la Literatura Academica</h3>
+                        <p class="text-sm text-slate-400">No existe un estudio publicado que aisle estadisticamente el tamano de la poblacion judia como variable independiente en el comportamiento de voto de los paises en la ONU. Los estudios existentes (Vignoli 2025, Mandler & Lutmar 2021) se centran en ideologia, comercio y demografia musulmana.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 p-6 bg-slate-900/80 rounded-xl border border-slate-700">
+                <p class="text-sm text-slate-300 italic">
+                    <span class="text-amber-400 font-bold">Nota metodologica:</span> Este analisis utiliza datos oficiales de la ONU (votaciones AGNU), del Parlamento Europeo (rankings ECI), datos demograficos del American Jewish Year Book (DellaPergola 2024), y encuestas de YouGov (2025). Las posturas de los paises pueden variar segun la resolucion especifica y el gobierno en turno. Los datos reflejan tendencias generales y no posiciones absolutas.
+                </p>
+            </div>
+        </div>
+
+        <!-- Sources -->
+        <div class="glass-panel p-8 rounded-3xl mb-12">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                Fuentes y Referencias
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div class="space-y-3">
+                    <h3 class="font-bold text-blue-400">Datos Demograficos</h3>
+                    <ul class="space-y-2 text-slate-400">
+                        <li class="flex items-start gap-2">
+                            <span class="text-blue-400 mt-1">&#8226;</span>
+                            DellaPergola, S. (2024). "World Jewish Population." American Jewish Year Book.
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-blue-400 mt-1">&#8226;</span>
+                            Jewish Virtual Library - Jewish Population of the World
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-blue-400 mt-1">&#8226;</span>
+                            Institute for Jewish Policy Research (JPR)
+                        </li>
+                    </ul>
+                    <h3 class="font-bold text-emerald-400 mt-4">Votaciones ONU</h3>
+                    <ul class="space-y-2 text-slate-400">
+                        <li class="flex items-start gap-2">
+                            <span class="text-emerald-400 mt-1">&#8226;</span>
+                            Washington Institute - "Snapshot of Israel's Deepening Diplomatic Isolation" (2025)
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-emerald-400 mt-1">&#8226;</span>
+                            UN Watch - 2024 UNGA Resolutions on Israel
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-emerald-400 mt-1">&#8226;</span>
+                            U.S. State Department - Voting Practices in the UN (2024)
+                        </li>
+                    </ul>
+                </div>
+                <div class="space-y-3">
+                    <h3 class="font-bold text-purple-400">Estudios Academicos</h3>
+                    <ul class="space-y-2 text-slate-400">
+                        <li class="flex items-start gap-2">
+                            <span class="text-purple-400 mt-1">&#8226;</span>
+                            Vignoli (2025). "Who Cares: Why the Israeli-Palestinian Conflict Matters to Some EU States." JCMS.
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-purple-400 mt-1">&#8226;</span>
+                            Mandler & Lutmar (2021). "Birds of a Feather Vote Together?" Israel Affairs, Vol. 27.
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-purple-400 mt-1">&#8226;</span>
+                            European Coalition for Israel (ECI) - EU Parliament Rankings (2019-2022)
+                        </li>
+                    </ul>
+                    <h3 class="font-bold text-pink-400 mt-4">Opinion Publica</h3>
+                    <ul class="space-y-2 text-slate-400">
+                        <li class="flex items-start gap-2">
+                            <span class="text-pink-400 mt-1">&#8226;</span>
+                            YouGov EuroTrack - Net Favourability Towards Israel (Mayo 2025)
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-pink-400 mt-1">&#8226;</span>
+                            Pew Research Center - Ideology and Views Toward the Middle East Conflict
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center text-slate-500 text-xs py-8 border-t border-slate-800">
+            <p>Analisis basado en datos oficiales de la ONU, Parlamento Europeo, American Jewish Year Book y YouGov</p>
+            <p class="mt-2">Fuentes: UN General Assembly Records | ECI Rankings | DellaPergola 2024 | YouGov EuroTrack 2025</p>
+            <p class="mt-4 text-slate-600">Generado para fines educativos e investigativos</p>
+        </footer>
+    </div>
+
+    <script>
+        // Jewish Population Chart
+        const popCtx = document.getElementById('populationChart').getContext('2d');
+        new Chart(popCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Francia', 'R. Unido', 'Alemania', 'Hungria', 'P. Bajos', 'Belgica', 'Italia', 'Suiza', 'Suecia', 'Espana', 'Austria', 'Rumania', 'Polonia', 'Dinamarca', 'Grecia', 'Chequia', 'Irlanda'],
+                datasets: [{
+                    label: 'Poblacion Judia',
+                    data: [438500, 313000, 125000, 45000, 35000, 29000, 26800, 20500, 14900, 13000, 10300, 9400, 8000, 6400, 4500, 3900, 1600],
+                    backgroundColor: function(context) {
+                        // Color by UN voting stance
+                        const proIsrael = [3, 15]; // Hungary, Czechia indices
+                        const abstain = [1, 2, 4, 6, 7, 10, 11, 12, 13]; // UK, Germany, Netherlands, Italy, Switzerland, Austria, Romania, Poland, Denmark
+                        const index = context.dataIndex;
+                        if (proIsrael.includes(index)) return 'rgba(16, 185, 129, 0.8)';
+                        if (abstain.includes(index)) return 'rgba(245, 158, 11, 0.8)';
+                        return 'rgba(239, 68, 68, 0.8)';
+                    },
+                    borderColor: function(context) {
+                        const proIsrael = [3, 15];
+                        const abstain = [1, 2, 4, 6, 7, 10, 11, 12, 13];
+                        const index = context.dataIndex;
+                        if (proIsrael.includes(index)) return '#10b981';
+                        if (abstain.includes(index)) return '#f59e0b';
+                        return '#ef4444';
+                    },
+                    borderWidth: 2,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        type: 'logarithmic',
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: {
+                            color: '#94a3b8',
+                            callback: function(value) {
+                                if (value === 1000) return '1K';
+                                if (value === 10000) return '10K';
+                                if (value === 100000) return '100K';
+                                if (value === 500000) return '500K';
+                                return '';
+                            }
+                        }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8', font: { size: 11 } }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#94a3b8',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw.toLocaleString() + ' personas';
+                            },
+                            afterLabel: function(context) {
+                                const proIsrael = [3, 15];
+                                const abstain = [1, 2, 4, 6, 7, 10, 11, 12, 13];
+                                const index = context.dataIndex;
+                                if (proIsrael.includes(index)) return 'Postura ONU: Pro-Israel';
+                                if (abstain.includes(index)) return 'Postura ONU: Abstencion';
+                                return 'Postura ONU: Vota contra Israel';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Scatter Plot: Population vs Support
+        const scatterCtx = document.getElementById('scatterChart').getContext('2d');
+        const scatterData = [
+            { x: 438500, y: 1, label: 'Francia' },
+            { x: 313000, y: 2, label: 'R. Unido' },
+            { x: 125000, y: 2, label: 'Alemania' },
+            { x: 45000, y: 3, label: 'Hungria' },
+            { x: 35000, y: 2, label: 'P. Bajos' },
+            { x: 29000, y: 1, label: 'Belgica' },
+            { x: 26800, y: 2, label: 'Italia' },
+            { x: 20500, y: 2, label: 'Suiza' },
+            { x: 14900, y: 1, label: 'Suecia' },
+            { x: 13000, y: 1, label: 'Espana' },
+            { x: 10300, y: 2, label: 'Austria' },
+            { x: 9400, y: 2, label: 'Rumania' },
+            { x: 8000, y: 2, label: 'Polonia' },
+            { x: 6400, y: 2, label: 'Dinamarca' },
+            { x: 4500, y: 1, label: 'Grecia' },
+            { x: 3900, y: 3, label: 'Chequia' },
+            { x: 1600, y: 1, label: 'Irlanda' },
+            { x: 1300, y: 1, label: 'Finlandia' },
+            { x: 1300, y: 1, label: 'Noruega' },
+            { x: 600, y: 1, label: 'Portugal' }
+        ];
+
+        new Chart(scatterCtx, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    {
+                        label: 'Vota contra Israel',
+                        data: scatterData.filter(d => d.y === 1),
+                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                        borderColor: '#ef4444',
+                        pointRadius: 10,
+                        pointHoverRadius: 14
+                    },
+                    {
+                        label: 'Abstencion',
+                        data: scatterData.filter(d => d.y === 2),
+                        backgroundColor: 'rgba(245, 158, 11, 0.8)',
+                        borderColor: '#f59e0b',
+                        pointRadius: 10,
+                        pointHoverRadius: 14
+                    },
+                    {
+                        label: 'Vota pro-Israel',
+                        data: scatterData.filter(d => d.y === 3),
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                        borderColor: '#10b981',
+                        pointRadius: 10,
+                        pointHoverRadius: 14
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'logarithmic',
+                        title: {
+                            display: true,
+                            text: 'Poblacion Judia (escala logaritmica)',
+                            color: '#94a3b8'
+                        },
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: {
+                            color: '#94a3b8',
+                            callback: function(value) {
+                                if (value === 500) return '500';
+                                if (value === 1000) return '1K';
+                                if (value === 5000) return '5K';
+                                if (value === 10000) return '10K';
+                                if (value === 50000) return '50K';
+                                if (value === 100000) return '100K';
+                                if (value === 500000) return '500K';
+                                return '';
+                            }
+                        }
+                    },
+                    y: {
+                        min: 0.5,
+                        max: 3.5,
+                        title: {
+                            display: true,
+                            text: 'Nivel de Apoyo a Israel',
+                            color: '#94a3b8'
+                        },
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: {
+                            color: '#94a3b8',
+                            stepSize: 1,
+                            callback: function(value) {
+                                if (value === 1) return 'Vota contra';
+                                if (value === 2) return 'Abstencion';
+                                if (value === 3) return 'Vota pro-Israel';
+                                return '';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#f8fafc', font: { weight: 'bold' } }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#94a3b8',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1,
+                        callbacks: {
+                            title: function(items) {
+                                const item = items[0];
+                                const allData = scatterData.filter(d => d.x === item.parsed.x && d.y === item.parsed.y);
+                                return allData.map(d => d.label).join(', ');
+                            },
+                            label: function(context) {
+                                return 'Poblacion judia: ' + context.parsed.x.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // EU Parliament Chart (by Country)
+        const euCtx = document.getElementById('euParliamentChart').getContext('2d');
+        new Chart(euCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Chequia', 'Hungria', 'Polonia', 'Italia', 'Alemania', 'Francia', 'P. Bajos', 'Belgica', 'Espana', 'Irlanda'],
+                datasets: [{
+                    label: '% Pro-Israel',
+                    data: [95, 90, 76, 65, 55, 40, 38, 30, 26, 14.6],
+                    backgroundColor: function(context) {
+                        const value = context.raw;
+                        if (value >= 70) return 'rgba(16, 185, 129, 0.8)';
+                        if (value >= 40) return 'rgba(245, 158, 11, 0.8)';
+                        return 'rgba(239, 68, 68, 0.8)';
+                    },
+                    borderColor: function(context) {
+                        const value = context.raw;
+                        if (value >= 70) return '#10b981';
+                        if (value >= 40) return '#f59e0b';
+                        return '#ef4444';
+                    },
+                    borderWidth: 2,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: {
+                            color: '#94a3b8',
+                            callback: function(value) { return value + '%'; }
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8', font: { size: 10 } }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#94a3b8',
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw + '% votos pro-Israel en PE';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Erosion Chart
+        const erosionCtx = document.getElementById('erosionChart').getContext('2d');
+        new Chart(erosionCtx, {
+            type: 'line',
+            data: {
+                labels: ['2017', '2019', '2021', '2023', '2025'],
+                datasets: [
+                    {
+                        label: 'Paises UE que se abstienen',
+                        data: [8, 10, 11, 13, 2],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#f59e0b',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6
+                    },
+                    {
+                        label: 'Paises UE que votan contra (pro-Israel)',
+                        data: [2, 2, 2, 2, 1],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#10b981',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 20,
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { color: '#94a3b8' },
+                        title: {
+                            display: true,
+                            text: 'Numero de paises',
+                            color: '#94a3b8'
+                        }
+                    },
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#94a3b8' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#f8fafc', font: { weight: 'bold' } }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#94a3b8',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1
+                    }
+                }
+            }
+        });
+
+        // Factors Chart
+        const factorsCtx = document.getElementById('factorsChart').getContext('2d');
+        new Chart(factorsCtx, {
+            type: 'radar',
+            data: {
+                labels: ['Ideologia Politica', 'Relaciones Comerciales', 'Demografia Musulmana', 'Experiencia Totalitaria', 'Responsabilidad Historica', 'Poblacion Judia'],
+                datasets: [{
+                    label: 'Peso relativo como predictor',
+                    data: [95, 65, 60, 55, 50, 15],
+                    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                    borderColor: '#8b5cf6',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#8b5cf6',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        angleLines: { color: 'rgba(255,255,255,0.1)' },
+                        pointLabels: {
+                            color: '#94a3b8',
+                            font: { size: 11, weight: 'bold' }
+                        },
+                        ticks: {
+                            color: '#64748b',
+                            backdropColor: 'transparent',
+                            stepSize: 25
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#94a3b8',
+                        callbacks: {
+                            label: function(context) {
+                                return 'Peso: ' + context.raw + '/100';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Public Opinion Chart
+        const opinionCtx = document.getElementById('opinionChart').getContext('2d');
+        new Chart(opinionCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Espana', 'Dinamarca', 'Italia', 'Francia', 'R. Unido', 'Alemania'],
+                datasets: [
+                    {
+                        label: 'Favorabilidad Neta',
+                        data: [-55, -54, -52, -48, -46, -44],
+                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                        borderColor: '#ef4444',
+                        borderWidth: 2,
+                        borderRadius: 6
+                    },
+                    {
+                        label: '% Simpatiza con Israel',
+                        data: [15, 18, 7, 18, 16, 17],
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderColor: '#3b82f6',
+                        borderWidth: 2,
+                        borderRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { color: '#94a3b8' },
+                        title: {
+                            display: true,
+                            text: 'Porcentaje',
+                            color: '#94a3b8'
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#f8fafc', font: { weight: 'bold' } }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#94a3b8',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                if (context.datasetIndex === 0) return 'Favorabilidad neta: ' + context.raw + '%';
+                                return 'Simpatiza con Israel: ' + context.raw + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
